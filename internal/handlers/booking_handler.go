@@ -32,7 +32,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	booking.LaunchDate = launchDate
 
 	if err := h.service.CreateBooking(&booking); err != nil {
-		http.Error(w, "Failed to create booking", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 

@@ -1,23 +1,23 @@
-# Use the official Golang image as the base image
-FROM golang:1.20-alpine
+# Use a minimal Debian-based image
+FROM debian:buster-slim
 
-# Set the Current Working Directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy go.mod and go.sum files to the workspace
-COPY go.mod go.sum ./
+# Install necessary tools
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
 
-# Download all dependencies
-RUN go mod download
+# Copy the pre-built 'main' executable from the host system to the container
+COPY main /app/main
 
-# Copy the source code into the container
-COPY . .
+# Ensure the executable has the correct permissions
+RUN chmod +x /app/main
 
-# Build the application and name the output executable `main`
-RUN go build -o main ./cmd/server
+# Verify the contents of /app to make sure 'main' was copied correctly
+RUN echo "Verifying if 'main' was copied:" && ls -la /app
 
-# Expose port 8080 to the outside world
+# Expose port 8080
 EXPOSE 8080
 
-# Command to run the executable
+# Run the executable
 CMD ["/app/main"]

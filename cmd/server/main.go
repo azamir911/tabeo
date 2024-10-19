@@ -2,15 +2,14 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
-
 	"space_trouble_booking/internal/handlers"
 	"space_trouble_booking/internal/repository"
 	"space_trouble_booking/internal/services"
 
 	"github.com/gorilla/mux"
-
 	_ "github.com/lib/pq"
 )
 
@@ -21,17 +20,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Initialize repository, service, and handler
+	// Initialize services and handlers
 	repo := repository.NewBookingRepository(db)
-	service := services.NewBookingService(repo)
-	handler := handlers.NewBookingHandler(service)
+	spaceXService := services.NewSpaceXService()
+	bookingService := services.NewBookingService(repo, spaceXService)
+	bookingHandler := handlers.NewBookingHandler(bookingService)
 
 	// Set up the router
 	router := mux.NewRouter()
-	router.HandleFunc("/bookings", handler.CreateBooking).Methods("POST")
-	router.HandleFunc("/bookings", handler.GetAllBookings).Methods("GET")
+
+	// Health check endpoint
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Server is up and running!")
+	}).Methods("GET")
+
+	router.HandleFunc("/bookings", bookingHandler.CreateBooking).Methods("POST")
+	router.HandleFunc("/bookings", bookingHandler.GetAllBookings).Methods("GET")
 
 	// Start the server
-	log.Println("Starting server on :8080...")
+	log.Println("Startingggg server on :8080...")
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", router))
 }
