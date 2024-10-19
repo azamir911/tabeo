@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"space_trouble_booking/internal/models"
 	"space_trouble_booking/internal/services"
-	"time"
 )
 
 type BookingHandler struct {
@@ -18,26 +18,24 @@ func NewBookingHandler(service *services.BookingService) *BookingHandler {
 
 func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	var booking models.Booking
+
+	// Decode the JSON request body into the booking struct
 	if err := json.NewDecoder(r.Body).Decode(&booking); err != nil {
+		log.Printf("Got a request error: '%+v'", err)
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	// Parse launch date from string to time.Time
-	launchDate, err := time.Parse("2006-01-02", booking.LaunchDate.Format("2006-01-02"))
+	// Call the service to create the booking
+	createdBooking, err := h.service.CreateBooking(&booking)
 	if err != nil {
-		http.Error(w, "Invalid launch date", http.StatusBadRequest)
-		return
-	}
-	booking.LaunchDate = launchDate
-
-	if err := h.service.CreateBooking(&booking); err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 
+	// Return the created booking as a response
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(booking)
+	json.NewEncoder(w).Encode(createdBooking)
 }
 
 func (h *BookingHandler) GetAllBookings(w http.ResponseWriter, r *http.Request) {
