@@ -38,6 +38,10 @@ func (s *BookingService) GetAllBookings() ([]*models.Booking, error) {
 	return s.repo.GetAllBookings()
 }
 
+func (s *BookingService) DeleteBooking(id int) error {
+	return s.repo.DeleteBooking(id)
+}
+
 // validateLaunchpadAvailability checks if the launchpad is available for the given date
 func (s *BookingService) validateLaunchpadAvailability(launchpadID string, launchDate time.Time) error {
 	// Check SpaceX launches for conflicts

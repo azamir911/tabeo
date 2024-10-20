@@ -10,4 +10,5 @@ type BookingRepository interface {
 	CreateBooking(booking *models.Booking) (*models.Booking, error)
 	GetAllBookings() ([]*models.Booking, error)
 	FindBookingByLaunchpadAndDate(launchpadID string, launchDate time.Time) (*models.Booking, error)
+	DeleteBooking(id int) error
 }

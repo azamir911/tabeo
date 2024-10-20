@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"space_trouble_booking/internal/models"
 	"space_trouble_booking/internal/services"
+	"strconv"
 )
 
 type BookingHandler struct {
@@ -47,4 +49,30 @@ func (h *BookingHandler) GetAllBookings(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(bookings)
+}
+
+func (h *BookingHandler) DeleteBooking(w http.ResponseWriter, r *http.Request) {
+	// Extract the booking ID from the URL
+	vars := mux.Vars(r)
+	idStr, ok := vars["id"]
+	if !ok {
+		http.Error(w, "Missing booking ID", http.StatusBadRequest)
+		return
+	}
+
+	// Convert the ID string to an integer
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid booking ID", http.StatusBadRequest)
+		return
+	}
+
+	// Call the service to delete the booking
+	err = h.service.DeleteBooking(id)
+	if err != nil {
+		http.Error(w, "Failed to delete booking", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent) // 204 No Content indicates successful deletion
 }

@@ -124,3 +124,12 @@ func (r *H2BookingRepository) FindBookingByLaunchpadAndDate(launchpadID string, 
 
 	return &booking, nil
 }
+
+func (r *H2BookingRepository) DeleteBooking(id int) error {
+	query := "DELETE FROM bookings WHERE id = ?"
+	_, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

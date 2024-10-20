@@ -96,3 +96,12 @@ func (r *PostgresBookingRepository) FindBookingByLaunchpadAndDate(launchpadID st
 
 	return &booking, nil
 }
+
+func (r *PostgresBookingRepository) DeleteBooking(id int) error {
+	query := "DELETE FROM bookings WHERE id = $1"
+	_, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
