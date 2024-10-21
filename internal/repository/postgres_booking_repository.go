@@ -21,10 +21,10 @@ func (r *PostgresBookingRepository) Migrate() error {
             first_name TEXT,
             last_name TEXT,
             gender TEXT,
-            birthday TEXT,
+            birthday TIMESTAMPTZ,
             launchpad_id TEXT,
             destination TEXT,
-            launch_date TEXT
+            launch_date TIMESTAMPTZ
         );
     `
 	_, err := r.db.Exec(createTable)
@@ -36,15 +36,18 @@ func (r *PostgresBookingRepository) CreateBooking(booking *models.Booking) (*mod
         INSERT INTO bookings (first_name, last_name, gender, birthday, launchpad_id, destination, launch_date)
         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id;
     `
+
+	// Convert birthday and launch date to RFC3339 string format
+	birthdayStr := booking.Birthday.Format(time.RFC3339)
+	launchDateStr := booking.LaunchDate.Format(time.RFC3339)
+
 	var id int
-	err := r.db.QueryRow(query, booking.FirstName, booking.LastName, booking.Gender, booking.Birthday, booking.LaunchpadID, booking.Destination, booking.LaunchDate).Scan(&id)
+	err := r.db.QueryRow(query, booking.FirstName, booking.LastName, booking.Gender, birthdayStr, booking.LaunchpadID, booking.Destination, launchDateStr).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update the booking ID with the newly generated one
 	booking.ID = id
-
 	return booking, nil
 }
 
@@ -57,11 +60,30 @@ func (r *PostgresBookingRepository) GetAllBookings() ([]*models.Booking, error) 
 
 	var bookings []*models.Booking
 	for rows.Next() {
-		booking := &models.Booking{}
-		if err := rows.Scan(&booking.ID, &booking.FirstName, &booking.LastName, &booking.Gender, &booking.Birthday, &booking.LaunchpadID, &booking.Destination, &booking.LaunchDate); err != nil {
+		var booking models.Booking
+		var birthdayStr, launchDateStr string
+
+		// Scan fields, storing date fields as strings
+		err := rows.Scan(&booking.ID, &booking.FirstName, &booking.LastName, &booking.Gender,
+			&birthdayStr, &booking.LaunchpadID, &booking.Destination, &launchDateStr)
+		if err != nil {
 			return nil, err
 		}
-		bookings = append(bookings, booking)
+
+		// Parse birthday and launch_date from strings to time.Time
+		birthday, err := time.Parse(time.RFC3339, birthdayStr)
+		if err != nil {
+			return nil, err
+		}
+		launchDate, err := time.Parse(time.RFC3339, launchDateStr)
+		if err != nil {
+			return nil, err
+		}
+
+		booking.Birthday = birthday
+		booking.LaunchDate = launchDate
+
+		bookings = append(bookings, &booking)
 	}
 	return bookings, nil
 }

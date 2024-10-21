@@ -28,6 +28,7 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
+	// Initialize services and handlers
 	spaceXService := services.NewSpaceXService()
 	bookingService := services.NewBookingService(repo, spaceXService)
 	bookingHandler := handlers.NewBookingHandler(bookingService)
@@ -40,6 +41,7 @@ func main() {
 		fmt.Fprintln(w, "Server is up and running!")
 	}).Methods("GET")
 
+	// Booking endpoints
 	router.HandleFunc("/bookings", bookingHandler.CreateBooking).Methods("POST")
 	router.HandleFunc("/bookings", bookingHandler.GetAllBookings).Methods("GET")
 	router.HandleFunc("/bookings/{id}", bookingHandler.DeleteBooking).Methods("DELETE")

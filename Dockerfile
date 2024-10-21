@@ -1,23 +1,33 @@
-# Use a minimal Debian-based image
-FROM debian:buster-slim
+# Stage 1: Build the Go executable
+FROM golang:1.20-alpine AS builder
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Install necessary tools
-RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+# Copy the Go modules and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Copy the pre-built 'main' executable from the host system to the container
-COPY main /app/main
+# Copy the rest of the application source code
+COPY . .
 
-# Ensure the executable has the correct permissions
-RUN chmod +x /app/main
+# Build the Go application
+RUN go build -o main ./cmd/server
 
-# Verify the contents of /app to make sure 'main' was copied correctly
-RUN echo "Verifying if 'main' was copied:" && ls -la /app
+# Stage 2: Create a minimal runtime image
+FROM alpine:latest
 
-# Expose port 8080
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the Go executable from the builder stage
+COPY --from=builder /app/main /app/main
+
+# Expose the application port
 EXPOSE 8080
 
-# Run the executable
+# Make the executable runnable
+RUN chmod +x /app/main
+
+# Run the Go application
 CMD ["/app/main"]

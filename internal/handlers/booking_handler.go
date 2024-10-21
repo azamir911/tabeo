@@ -43,6 +43,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 func (h *BookingHandler) GetAllBookings(w http.ResponseWriter, r *http.Request) {
 	bookings, err := h.service.GetAllBookings()
 	if err != nil {
+		log.Printf("Got a request error: '%+v'", err)
 		http.Error(w, "Failed to retrieve bookings", http.StatusInternalServerError)
 		return
 	}
@@ -63,6 +64,7 @@ func (h *BookingHandler) DeleteBooking(w http.ResponseWriter, r *http.Request) {
 	// Convert the ID string to an integer
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Got a request error: '%+v'", err)
 		http.Error(w, "Invalid booking ID", http.StatusBadRequest)
 		return
 	}
@@ -70,6 +72,7 @@ func (h *BookingHandler) DeleteBooking(w http.ResponseWriter, r *http.Request) {
 	// Call the service to delete the booking
 	err = h.service.DeleteBooking(id)
 	if err != nil {
+		log.Printf("Got a request error: '%+v'", err)
 		http.Error(w, "Failed to delete booking", http.StatusInternalServerError)
 		return
 	}
